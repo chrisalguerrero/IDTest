@@ -1,0 +1,32 @@
+
+;Insertion device position correction PLC
+
+#include “EncoderSetup.pmc”
+
+#define US_OFFSET 	0 ; default value from 1.5m-IVU source code file
+#define DS_OFFSET 	0 ; ID-CELL5 offsets, use correct set of values and replace offsets
+
+OPEN PLC 0 CLEAR
+
+#define US_ENC_RAW 	M8000
+#define US_ENC_OFFSET 	US_OFFSET ;Jack offset upstream from Constants.h
+#define US_ENC_ACTUAL 	US_ENC_RAW+US_ENC_OFFSET
+#define US_ENC_FACTOR 	US_ENC_RAW/US_ENC_ACTUAL
+
+#define DS_ENC_RAW 	M8001
+#define DS_ENC_OFFSET 	DS_OFFSET ;Jack offset downstream from Constants.h
+#define DS_ENC_ACTUAL 	DS_ENC_RAW+DS_ENC_OFFSET
+#define DS_ENC_FACTOR 	DS_ENC_RAW/DS_ENC_ACTUAL
+
+
+#define DELTA			ABS(DS_ENC_RAW-US_ENC_RAW)
+#define US_SLOPE_COR 		DELTA*US_ENC_FACTOR
+#define DS_SLOPE_COR 		DELTA*DS_ENC_FACTOR
+
+#define US_COR_VAL		US_ENC_ACTUAL+US_SLOPE_COR
+#define DS_COR_VAL		DS_ENC_ACTUAL+DS_SLOPE_COR
+
+US_ENC_RAW = US_COR_VAL		; set motor #1 actual position to corrected value
+DS_ENC_RAW = DS_COR_VAL		; set motor #2 actual position to corrected value
+
+DISABLE PLC 0 CLOSE
